@@ -1,0 +1,9 @@
+{
+  "aws_endpoint": "your-aws-iot-endpoint.amazonaws.com",
+  "root_ca_path": "certs/AmazonRootCA1.pem",
+  "cert_path": "certs/cloud-certificate.pem.crt",
+  "private_key_path": "certs/cloud-private.pem.key",
+  "client_id": "cloud-classifier-service",
+  "topic_raw_data": "door/raw_data",
+  "topic_results": "door/classification_results"
+}

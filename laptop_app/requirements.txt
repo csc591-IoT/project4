@@ -1,0 +1,8 @@
+AWSIoTPythonSDK==1.5.4
+tkinter
+numpy
+scikit-learn
+joblib
+pandas
+matplotlib
+seaborn

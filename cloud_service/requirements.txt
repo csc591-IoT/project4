@@ -1,0 +1,5 @@
+Flask==2.3.3
+AWSIoTPythonSDK==1.5.4
+numpy
+scikit-learn
+joblib

@@ -1,0 +1,8 @@
+AWSIoTPythonSDK==1.5.4
+RPi.GPIO
+numpy
+scikit-learn
+joblib
+pandas
+matplotlib
+seaborn
