@@ -11,8 +11,8 @@ from collections import deque
 import AWSIoTPythonSDK.MQTTLib as AWSIoTPyMQTT
 
 # ========= Configuration =========
-SAMPLE_HZ = 100         # Same as training data
-WINDOW_SIZE = 100       # Number of samples for classification
+SAMPLE_HZ = 100
+WINDOW_SIZE = 100
 MOVEMENT_THRESHOLD = 15.0  # deg/s
 AWS_IOT_AVAILABLE = True
 
@@ -58,24 +58,16 @@ def _read_word(bus, reg, retries=MAX_I2C_RETRIES):
                 raise
 
 def init_imu(bus):
-    """Initialize MPU6050 - wake it up"""
-    try:
-        bus.write_byte_data(MPU_ADDR, PWR_MGMT_1, 0)
-        time.sleep(0.1)
-        # Verify it's working by reading WHO_AM_I register
-        who_am_i = bus.read_byte_data(MPU_ADDR, 0x75)
-        if who_am_i == 0x68:
-            print(f"✓ MPU6050 initialized (WHO_AM_I: 0x{who_am_i:02X})")
-        else:
-            print(f" Unexpected WHO_AM_I: 0x{who_am_i:02X} (expected 0x68)")
-    except OSError as e:
-        print(f"✗ Failed to initialize MPU6050: {e}")
-        print("  Check connections:")
-        print("    - VCC → 3.3V or 5V")
-        print("    - GND → GND")
-        print("    - SDA → GPIO 2 (Pin 3)")
-        print("    - SCL → GPIO 3 (Pin 5)")
-        raise
+    """Initialize MPU6050"""
+
+    bus.write_byte_data(MPU_ADDR, PWR_MGMT_1, 0)
+    time.sleep(0.1)
+    
+    who_am_i = bus.read_byte_data(MPU_ADDR, 0x75)
+    if who_am_i == 0x68:
+        print(f"MPU6050 initialized (WHO_AM_I: 0x{who_am_i:02X})")
+    else:
+        print(f"Unexpected WHO_AM_I: 0x{who_am_i:02X} (expected 0x68)")
 
 def read_imu_data(bus):
     """
@@ -109,7 +101,7 @@ def read_imu_data(bus):
             'timestamp': time.time()
         }
     except OSError as e:
-        print(f"✗ I2C Error reading sensor: {e}")
+        print(f"I2C Error reading sensor: {e}")
         return None
 
 # ========= AWS IoT Manager =========
@@ -123,7 +115,7 @@ class AWSIoTManager:
         self.publish_errors = 0
         
         if not AWS_IOT_AVAILABLE:
-            print("AWS IoT SDK not available - running in local mode only")
+            print("AWS IoT SDK not available")
             return
         
         # Load configuration and connect
@@ -138,23 +130,23 @@ class AWSIoTManager:
             CLIENT_ID        = cfg["client_id"]
             self.TOPIC       = cfg["topic"]
             
-            print(f"✓ AWS IoT config loaded from {config_path}")
-            print(f"  Endpoint: {AWS_ENDPOINT}")
-            print(f"  Client ID: {CLIENT_ID}")
+            print(f"AWS IoT config loaded from {config_path}")
+            print(f"Endpoint: {AWS_ENDPOINT}")
+            print(f"Client ID: {CLIENT_ID}")
             
-            # Create an AWS IoT MQTT client
+            # Creates an AWS IoT MQTT client
             self.client = AWSIoTPyMQTT.AWSIoTMQTTClient(CLIENT_ID)
             self.client.configureEndpoint(AWS_ENDPOINT, 8883)
             self.client.configureCredentials(ROOT_CA_PATH, PRIVATE_KEY_PATH, CERT_PATH)
             
-            # Connect to AWS IoT Core
-            print("Connecting to AWS IoT Core...")
+            # Connects to AWS IoT Core
+            print("Connecting to AWS IoT Core")
             self.client.connect()
             self.connected = True
-            print("✓ Connected to AWS IoT Core")
+            print("Connected to AWS IoT Core")
 
         except Exception as e:
-            print(f"Failed to connect to AWS IoT: {e}")
+            print(f"Failed to connect to AWS IoT")
             self.connected = False
     
     def publish_door_state(self, state, confidence=None, timestamp=None):
@@ -186,17 +178,18 @@ class AWSIoTManager:
             self.client.publish(self.TOPIC, message, 1)
             
             self.publish_count += 1
-            print(f"  ☁️  Published to AWS IoT: {self.TOPIC} - {state}")
+            print(f"Published to AWS IoT: {self.TOPIC} - {state}")
             return True
             
         except Exception as e:
             self.publish_errors += 1
-            print(f"  ✗ AWS IoT publish error: {e}")
+            print(f"AWS IoT publish error: {e}")
             return False
     
     def publish_classification_result(self, result_data):
         """
-        Publish detailed classification results (optional - not used in simple mode)
+        OPTIONAL FUNCTION FOR FUTURE
+        Publish detailed classification results
         
         Args:
             result_data: Dict with classification details
@@ -210,7 +203,7 @@ class AWSIoTManager:
             self.client.publish("door/classification_results", message, 0)
             return True
         except Exception as e:
-            print(f"  ✗ Error publishing results: {e}")
+            print(f"Error publishing results: {e}")
             return False
     
     def disconnect(self):
@@ -218,7 +211,7 @@ class AWSIoTManager:
         if self.connected and self.client:
             try:
                 self.client.disconnect()
-                print("✓ Disconnected from AWS IoT")
+                print("Disconnected from AWS IoT")
             except:
                 pass
         self.connected = False
@@ -236,7 +229,7 @@ class DoorStateDetector:
         # AWS IoT Manager
         self.aws_manager = aws_manager
         
-        # Class names (must match training)
+        # Class names
         self.class_names = ['Open', 'Close']
         
         # Load trained model
@@ -255,15 +248,14 @@ class DoorStateDetector:
             if os.path.exists(model_path) and os.path.exists(scaler_path):
                 self.model = joblib.load(model_path)
                 self.scaler = joblib.load(scaler_path)
-                print(f"✓ Model loaded: {model_path}")
-                print(f"✓ Scaler loaded: {scaler_path}")
+                print(f"Model loaded: {model_path}")
+                print(f"Scaler loaded: {scaler_path}")
             else:
-                print(f"✗ Model files not found!")
-                print(f"  Looking for: {model_path} and {scaler_path}")
-                print(f"  Train the model first: python train_svm_2class.py")
+                print(f"Model files not found!")
+                print(f"Looking for: {model_path} and {scaler_path}")
                 sys.exit(1)
         except Exception as e:
-            print(f"✗ Error loading model: {e}")
+            print(f"Error loading model: {e}")
             sys.exit(1)
     
     def detect_movement(self, data):
@@ -318,34 +310,20 @@ class DoorStateDetector:
             return prediction, class_name
             
         except Exception as e:
-            print(f"✗ Classification error: {e}")
+            print(f"Classification error: {e}")
             return None, None
     
     def print_status(self, state):
         """Print formatted status to terminal with colors"""
         timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
         
-        # Terminal color codes
-        RESET = '\033[0m'
-        BOLD = '\033[1m'
-        
-        if state == "Open":
-            COLOR = '\033[92m'  # Green
-            SYMBOL = "↑"
-        elif state == "Close":
-            COLOR = '\033[91m'  # Red
-            SYMBOL = "↓"
-        else:
-            COLOR = '\033[93m'  # Yellow
-            SYMBOL = "?"
-        
         # Update statistics
         self.total_classifications += 1
         if state in self.state_counts:
             self.state_counts[state] += 1
         
-        status_str = f"[{timestamp}] {COLOR}{BOLD}{SYMBOL} {state.upper()}{RESET}"
-        status_str += f"  (Total: {self.total_classifications}, "
+        status_str = f"[{timestamp}]"
+        status_str += f"(Total: {self.total_classifications}, "
         status_str += f"Open: {self.state_counts['Open']}, "
         status_str += f"Close: {self.state_counts['Close']})"
         
@@ -373,7 +351,7 @@ class DoorStateDetector:
             self.is_moving = True
             self.movement_start_time = time.time()
             timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-            print(f"[{timestamp}] 🔄 Movement detected (w_mag={imu_data['w_mag']:.2f} deg/s)")
+            print(f"[{timestamp}] Movement detected (w_mag={imu_data['w_mag']:.2f} deg/s)")
             return False, None
             
         elif not movement_detected and self.is_moving:
@@ -402,21 +380,14 @@ class DoorStateDetector:
                             )
                         
                         return True, class_name
-        
+                    
         return False, None
 
 def main():
-    print("\n" + "="*70)
-    print("Door State Detection System - Live MPU6050 Sensor + AWS IoT")
     print("="*70)
     print(f"Sampling rate: {SAMPLE_HZ} Hz")
     print(f"Window size: {WINDOW_SIZE} samples")
     print(f"Movement threshold: {MOVEMENT_THRESHOLD} deg/s")
-    print("\nLegend:")
-    print("  🟢 ↑ Open  - Door is opening")
-    print("  🔴 ↓ Close - Door is closing")
-    print("  ☁️  - Event published to AWS IoT")
-    print("\nPress Ctrl+C to stop")
     print("="*70 + "\n")
     
     # Initialize AWS IoT Manager
@@ -431,12 +402,12 @@ def main():
     try:
         init_imu(bus)
     except Exception as e:
-        print(f"\n✗ Cannot initialize sensor. Exiting.")
+        print(f"\nCannot initialize sensor. Exiting.")
         bus.close()
         aws_manager.disconnect()
         sys.exit(1)
     
-    print("✓ Starting real-time detection...\n")
+    print("Starting real-time detection...\n")
     
     # Timing for precise sampling
     period = 1.0 / SAMPLE_HZ
@@ -453,12 +424,7 @@ def main():
             if imu_data is None:
                 consecutive_errors += 1
                 if consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
-                    print(f"\n✗ Too many consecutive I2C errors ({consecutive_errors})")
-                    print("  Possible causes:")
-                    print("    1. Loose wire connection")
-                    print("    2. Power supply issue")
-                    print("    3. Sensor failure")
-                    print("  Please check hardware and restart")
+                    print(f"Too many consecutive I2C errors ({consecutive_errors})")
                     break
                 time.sleep(0.01)
                 continue
@@ -492,16 +458,15 @@ def main():
     
     finally:
         bus.close()
-        print("✓ I2C bus closed")
+        print("I2C bus closed")
         aws_manager.disconnect()
 
 if __name__ == "__main__":
-    # Check dependencies
     try:
         from smbus2 import SMBus
     except ImportError:
-        print("✗ Error: smbus2 not installed")
-        print("  Install with: pip install smbus2")
+        print("Error: smbus2 not installed")
+        print("Install with: pip install smbus2")
         sys.exit(1)
     
     main()

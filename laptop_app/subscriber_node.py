@@ -11,11 +11,10 @@ current_state = {
     'confidence': None
 }
 
-
 def update_display():
-    emoji = "🟢 OPEN" if current_state['status'].lower() == 'open' else "🔴 CLOSED"
+    emoji = "OPEN" if current_state['status'].lower() == 'open' else "CLOSED"
     if current_state['status'].lower() == 'unknown':
-        emoji = "⚪ UNKNOWN"
+        emoji = "UNKNOWN"
     
     print(f"\n{'='*70}")
     print(f"  Door Status: {emoji}")
@@ -69,14 +68,14 @@ def main():
         CLIENT_ID        = cfg["client_id"] + "-subscriber"
         TOPIC            = cfg["topic"]
         
-        print(f"✓ Connected to AWS IoT")
-        print(f"✓ Monitoring topic: {TOPIC}")
+        print(f"Connected to AWS IoT")
+        print(f"Monitoring topic: {TOPIC}")
         
     except Exception as e:
-        print(f"✗ Configuration error: {e}")
+        print(f"Configuration error: {e}")
         return
     
-    # Create and connect AWS IoT MQTT client
+    # 
     try:
         myAWSIoTMQTTClient = AWSIoTPyMQTT.AWSIoTMQTTClient(CLIENT_ID)
         myAWSIoTMQTTClient.configureEndpoint(AWS_ENDPOINT, 8883)
@@ -86,7 +85,7 @@ def main():
         myAWSIoTMQTTClient.subscribe(TOPIC, 1, on_message_callback)
         
         print(f"{'='*70}\n")
-        print("Waiting for door events... (Press Ctrl+C to stop)\n")
+        print("Waiting for door events...\n")
         
         # Keep running to receive messages
         while True:
