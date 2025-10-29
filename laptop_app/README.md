@@ -18,5 +18,5 @@ pip install -r requirements.txt
 
 Run the door monitor:
 ```bash
-python door_monitor.py
+python subscriber_node.py
 ```
