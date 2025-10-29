@@ -77,6 +77,24 @@ Update the `config.json` file with correct paths:
   "topic_results": "door/classification_results"
 }
 ```
+
+### 4. Train the Model (If needed)
+
+If you don't have the model files, you'll need to train the SVM model:
+
+1. **Collect training data:**
+   ```bash
+   python iot_data_logger.py
+   ```
+   Follow the prompts to collect door open/close events.
+
+2. **Train the model:**
+   ```bash
+   python train_svm_model.py sessions/data_with_30_entries.csv
+   ```
+   This will generate `30_entries_model.pkl` and `30_entries_scaler.pkl`.
+
+
 ## Run
 
 Start the door detection system:
