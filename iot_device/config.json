@@ -1,5 +1,5 @@
 {
-  "aws_endpoint": "a2k13a18qjxz7o-ats.iot.us-east-1.amazonaws.com",
+  "aws_endpoint": "a2k13a18qjxz7o-ats.iot.us-east-2.amazonaws.com",
   "root_ca_path": "certs/AmazonRootCA1.pem",
   "cert_path": "certs/certificate.pem.crt",
   "private_key_path": "certs/private.pem.key",

@@ -1,8 +1,8 @@
 {
-  "aws_endpoint": "your-aws-iot-endpoint.amazonaws.com",
-  "root_ca_path": "certs/AmazonRootCA1.pem",
-  "cert_path": "certs/device-certificate.pem.crt",
-  "private_key_path": "certs/private.pem.key",
-  "client_id": "door-monitor-laptop-001",
+  "aws_endpoint": "a2k13a18qjxz7o-ats.iot.us-east-2.amazonaws.com",
+  "root_ca_path": "../iot_device/certs/AmazonRootCA1.pem",
+  "cert_path": "../iot_device/certs/certificate.pem.crt",
+  "private_key_path": "../iot_device/certs/private.pem.key",
+  "client_id": "door-monitor-laptop",
   "topic": "door/state"
 }
