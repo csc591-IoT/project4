@@ -1,4 +1,4 @@
-# IoT Device - Door State Detection System
+# IoT Device
 
 ## Overview
 This is the **MQTT Publisher** application that runs on a Raspberry Pi with an MPU6050 IMU sensor. It detects door open/close events using machine learning (SVM classifier) and publishes the classification results to AWS IoT Core.
